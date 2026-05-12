@@ -1,0 +1,55 @@
+project:
+  seed: 42
+  output_dir: results/
+
+data:
+  source: football-data
+  leagues: ["E0", "D1"]
+  seasons: [ "2011-12", "2012-13", "2013-14", "2014-15", "2015-16", "2016-17", "2017-18", "2018-19", "2019-20",
+   "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"]
+  raw_dir: data/raw
+  processed_dir: data/processed
+
+features:
+  rolling_matches: 5
+  use_shots: true
+  use_cards: true
+  use_referee: true
+  use_congestion: true
+  use_bookmaker_features: false
+
+dixon_coles:
+  xi: 0.001
+  max_goals: 10
+  train_window_days: 730
+
+models:
+  logistic_regression:
+    enabled: true
+    C: 1.0
+    max_iter: 2000
+  lightgbm:
+    enabled: true
+    n_estimators: 300
+    learning_rate: 0.03
+    max_depth: 4
+    num_leaves: 15
+    min_child_samples: 30
+
+calibration:
+  enabled: true
+  method: isotonic
+
+backtest:
+  mode: walk_forward
+  retrain_every_round: true
+  validation_rounds: 3
+
+betting:
+  enabled: true
+  strategy_fixed_stake: true
+  fixed_stake: 1.0
+  strategy_fractional_kelly: true
+  fractional_kelly: 0.25
+  max_fraction: 0.05
+  min_edge: 0.00

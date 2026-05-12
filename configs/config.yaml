@@ -1,0 +1,129 @@
+# =========================
+# DATA
+# =========================
+data:
+  root: "data"
+  results_dir: "results"
+  filter_files: []        # např. ["E0.csv"]
+
+# =========================
+# EVALUATION
+# =========================
+evaluation:
+  metrics:
+    - accuracy
+    - log_loss
+    - brier_score
+    - rps
+
+  aggregation:
+    by: ["season", "file", "round"]
+
+# =========================
+# BASELINE MODELS
+# =========================
+baselines:
+
+  random_uniform:
+    enabled: true
+
+  random_empirical:
+    enabled: true
+    min_history_matches: 1
+
+  dumb_bettor:
+    enabled: true
+    points:
+      win: 3
+      draw: 1
+      loss: 0
+
+# =========================
+# ELO MODEL
+# =========================
+elo:
+  enabled: true
+  base_elo: 1500
+  k_factor: 25
+  home_advantage: 100
+  window_days: 365   # null = celá historie, jinak např. 365 nebo 1825
+
+  leagues:
+    E0: 1600
+    E1: 1480
+    E2: 1360
+    E3: 1240
+    D1: 1600
+    D2: 1480
+    SP1: 1600
+    N1: 1500
+    I1: 1600
+    F1: 1600
+    B1: 1500
+    EC: 1120
+    SC0: 1500
+    SC1: 1380
+    SC2: 1260
+    SC3: 1140
+    F2: 1480
+    I2: 1480
+    P1: 1400
+    G1: 1400
+    SP2: 1480
+    T1: 1400
+
+  promotion_relegation:
+    alpha: 0.6
+
+# =========================
+# DIXON-COLES MODEL
+# =========================
+dixon_coles:
+  enabled: true
+  max_goals: 7
+  regularization: 0.001
+  window_days: 365
+  min_matches_train: 100
+
+# =========================
+# FEATURE ENGINEERING
+# =========================
+features:
+  use_elo: true
+  use_odds: true
+  use_form: true
+
+  form_matches: 5
+
+  fillna:
+    form: 1.5
+    goals: "mean"
+
+# =========================
+# BETTING SIMULATION
+# =========================
+betting:
+  enabled: true
+
+  strategies:
+    fixed_stake:
+      stake: 1.0
+
+    kelly:
+      fraction: 0.5
+
+  bankroll:
+    initial: 1000
+
+# =========================
+# OUTPUT
+# =========================
+output:
+  save_csv: true
+  save_plots: true
+  save_models: false
+
+  files:
+    results: "results/results_summary.csv"
+    predictions: "results/predictions.csv"
+    metrics: "results/metrics.csv"
