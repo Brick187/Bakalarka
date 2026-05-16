@@ -27,6 +27,7 @@ CLASS_NAMES = ["HomeWin", "Draw", "AwayWin"]
 
 # PONECHÁNO PODLE PŮVODNÍHO SOUBORU
 FEATURE_COLS = [
+
     # odds
     "OddsProbHome",
     "OddsProbDraw",
@@ -75,6 +76,7 @@ FEATURE_COLS = [
 
 # metoda 1: průběžné přeučování po týdnu
 MIN_HISTORY_MATCHES = 200
+WF_TRAIN_WINDOW_DAYS = 1460
 VALIDATION_WEEKS = 4
 
 # metoda 2: trénink na 4 sezónách, test po týdnu na další sezóně
@@ -439,7 +441,13 @@ def run_weekly_walk_forward(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, D
             if test_df.empty:
                 continue
 
-            all_past = df[df["Date"] < test_df["Date"].min()].copy()
+            test_start_date = test_df["Date"].min()
+            train_from = test_start_date - pd.Timedelta(days=WF_TRAIN_WINDOW_DAYS)
+
+            all_past = df[
+                (df["Date"] >= train_from) &
+                (df["Date"] < test_start_date)
+            ].copy()
             if len(all_past) < MIN_HISTORY_MATCHES:
                 continue
 
@@ -488,6 +496,7 @@ def run_weekly_walk_forward(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, D
                         valid_matches=len(valid_df),
                     )
                 )
+        print(f"Processed: Season {season}")
 
     return pd.DataFrame(results), pd.concat(match_rows, ignore_index=True) if match_rows else pd.DataFrame(), last_models
 

@@ -330,10 +330,10 @@ def build_feature_dataset(matches, form_n=5):
         if not pd.isna(as_):
             shots_hist[away].append(as_)
 
-            if not pd.isna(hst):
-                shots_target_hist[home].append(hst)
-            if not pd.isna(ast):
-                shots_target_hist[away].append(ast)
+        if not pd.isna(hst):
+            shots_target_hist[home].append(hst)
+        if not pd.isna(ast):
+            shots_target_hist[away].append(ast)
 
         home_points[home].append(home_pts)
         away_points[away].append(away_pts)

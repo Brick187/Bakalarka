@@ -1,5 +1,26 @@
 import csv
 from pathlib import Path
+import shutil
+
+RAW_DIR = Path("data/raw")
+PROCESSED_DIR = Path("data/processed")
+
+for season_dir in RAW_DIR.iterdir():
+
+    if not season_dir.is_dir():
+        continue
+
+    out_season = PROCESSED_DIR / season_dir.name
+    out_season.mkdir(parents=True, exist_ok=True)
+
+    for csv_file in season_dir.glob("*.csv"):
+
+        output_path = out_season / csv_file.name
+
+        # kopie raw -> processed
+        shutil.copy2(csv_file, output_path)
+
+        print(f"Kopíruji: {csv_file} -> {output_path}")
 
 def add_elo_headers(csv_path):
     p = Path(csv_path)
@@ -55,4 +76,4 @@ def process_all_seasons(root_dir):
         for csv_file in sorted(season_dir.glob("*.csv")):
             add_elo_headers(csv_file)
 
-process_all_seasons("data")
+process_all_seasons("data/processed")

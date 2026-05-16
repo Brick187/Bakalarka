@@ -1,10 +1,21 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
 
 HOME_ADV = 100
 DRAW_BASE = 0.28
 DRAW_SCALE = 300
+# =========================
+# NASTAVENÍ
+# =========================
+CSV_PATH = Path("data/processed/2018-19/E0_elo.csv")   # Premier League 2018/19
+N_TEAMS = 10
+
+# Pokud chceš konkrétní týmy, napiš je sem:
+SELECTED_TEAMS = ["Man City", "Liverpool", "Chelsea", "Tottenham", "Arsenal",
+                   "Cardiff", "Wolves", "Everton", "Leicester", "Fulham"]
+
 
 def safe_read_csv(path: Path) -> pd.DataFrame:
     try:
@@ -212,3 +223,64 @@ def evaluate_tree_by_week_roundstyle(root_dir: str, predictor, out_csv: str):
 if __name__ == "__main__":
     evaluate_tree_by_week_roundstyle("data/processed/", predict_strict_draw, "results/elo_week_roundstyle_strict.csv")
     evaluate_tree_by_week_roundstyle("data/processed/", predict_threshold_draw, "results/elo_week_roundstyle_threshold.csv")
+    # =========================
+    # NAČTENÍ
+    # =========================
+    df = pd.read_csv(CSV_PATH)
+
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True, errors="coerce")
+    df = df.dropna(subset=["Date", "HomeTeam", "AwayTeam", "EloHome", "EloAway"])
+    df = df.sort_values("Date").reset_index(drop=True)
+
+    df["EloHome"] = pd.to_numeric(df["EloHome"], errors="coerce")
+    df["EloAway"] = pd.to_numeric(df["EloAway"], errors="coerce")
+
+    # =========================
+    # PŘEVOD NA LONG FORMÁT
+    # =========================
+    home = df[["Date", "HomeTeam", "EloHome"]].rename(
+        columns={"HomeTeam": "Team", "EloHome": "Elo"}
+    )
+
+    away = df[["Date", "AwayTeam", "EloAway"]].rename(
+        columns={"AwayTeam": "Team", "EloAway": "Elo"}
+    )
+
+    elo_long = pd.concat([home, away], ignore_index=True)
+    elo_long = elo_long.dropna(subset=["Elo"])
+    elo_long = elo_long.sort_values(["Team", "Date"])
+
+    # =========================
+    # VÝBĚR 10 TÝMŮ
+    # =========================
+    if SELECTED_TEAMS is None:
+        # vybere 10 týmů s nejvyšším Elo na konci sezóny
+        last_elos = (
+            elo_long.sort_values("Date")
+            .groupby("Team")
+            .tail(1)
+            .sort_values("Elo", ascending=False)
+        )
+
+        selected_teams = last_elos["Team"].head(N_TEAMS).tolist()
+    else:
+        selected_teams = SELECTED_TEAMS
+
+    plot_df = elo_long[elo_long["Team"].isin(selected_teams)].copy()
+
+    # =========================
+    # GRAF
+    # =========================
+    plt.figure(figsize=(14, 8))
+
+    for team in selected_teams:
+        team_df = plot_df[plot_df["Team"] == team].sort_values("Date")
+        plt.plot(team_df["Date"], team_df["Elo"], marker="o", markersize=3, linewidth=2, label=team)
+
+    plt.title("Vývoj Elo ratingu během sezóny 2018/19 – Premier League")
+    plt.xlabel("Datum")
+    plt.ylabel("Elo rating")
+    plt.grid(True, alpha=0.3)
+    plt.legend(title="Tým", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
